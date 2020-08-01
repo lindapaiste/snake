@@ -8,4 +8,4 @@ Features:
 * Snake speeds up over time
 * Snake gets longer after eating an apple
 * Random obstacles appear and disappear
-* Resizes based on window height (assumes that width is the larger dimension)
+* Size based on window height (assumes that width is the larger dimension)
