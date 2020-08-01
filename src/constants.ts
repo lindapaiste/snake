@@ -48,4 +48,4 @@ export const MAX_OBSTACLES = 5;
  */
 const availableVh = 76; //based on cs vh from header and borders
 
-export const SQUARE_SIZE = (window.innerHeight * availableVh) / 100 / HEIGHT;
+export const SQUARE_SIZE = Math.floor((window.innerHeight * availableVh) / 100 / HEIGHT);
