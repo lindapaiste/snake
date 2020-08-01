@@ -1,10 +1,21 @@
-import React, { useReducer, useEffect, useRef, useCallback } from "react";
+import React, {
+  useReducer,
+  useEffect,
+  useRef,
+  useCallback,
+  useState
+} from "react";
 import "./styles.css";
-import { SPEED_UP_EVERY } from "./constants";
+import {
+  SPEED_UP_EVERY,
+  OBSTACLE_EVERY,
+  OBSTACLE_EXPIRE,
+} from "./constants";
 import Board from "./Render";
-import { getInitialState, reducer } from "./reducer";
+import { reducer } from "./state/reducer";
 import { getKeyDirection } from "./util";
-import { arrowPress, moveSnake, speedUp, restart, pause } from "./actions";
+import { useActions } from "./state/actions";
+import {getInitialState} from "./state/initialState";
 
 //requestAnimationFrame?
 
@@ -22,30 +33,26 @@ import { arrowPress, moveSnake, speedUp, restart, pause } from "./actions";
  */
 export const _useInterval = (callback: () => void, timeout: number): void => {
   //when changing callback, need to clear the previous interval
-  //use useRef to have a persistant reference
-  //initialize to a number so that clearInterval doesn't have to be conditional
-  const intervalId = useRef<number>(-1);
+  //use useRef to have a persistent reference
+  //typescript got confused about the return value when not prefixing with window.
+  const intervalId = useRef(-1);
 
   useEffect(() => {
     //clear the previous
-    clearInterval(intervalId.current);
+    window.clearInterval(intervalId.current);
 
     //set interval to new value
-    intervalId.current = setInterval(callback, timeout);
+    intervalId.current = window.setInterval(callback, timeout);
 
     //return clearInterval cleanup
-    return () => clearInterval(intervalId.current);
+    return () => window.clearInterval(intervalId.current);
   }, [callback, timeout]);
 };
 
 /**
  * version which handles useCallback internally
  */
-export const useInterval = (
-  callback: () => void,
-  deps: any[],
-  timeout: number
-): void => {
+export const useInterval = (callback: () => void, deps: any[], timeout: number): void => {
   const memo = useCallback(callback, deps);
   _useInterval(memo, timeout);
 };
@@ -53,58 +60,57 @@ export const useInterval = (
 export default function App() {
   const [state, dispatch] = useReducer(reducer, getInitialState());
 
+  const actions = useActions(dispatch);
+
+  const [ticks, setTicks] = useState(0);
+
   /**
    * add keyPress event listener to the window to respond to arrow keys
    *
-   * pause on press "P" key or spacebar
+   * pause on press "P" key or space bar
    */
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "p" || e.key === "Space") {
-        console.log("pause");
-        dispatch(pause());
+      if (e.key === "p" || e.code === "Space") {
+        actions.togglePause();
         return;
       }
       const dir = getKeyDirection(e);
       //do nothing if other key pressed
-      console.log(e);
       if (dir !== null) {
         //potentially ignore opposite direction??
-        dispatch(arrowPress(dir));
+        actions.arrowPress(dir);
       }
     };
     window.addEventListener("keydown", handleKeyPress);
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [dispatch]);
+  }, [actions]);
 
   /**
    * move effect -- move every x seconds until death
+   * having multiple intervals does not seem to work, so need to tie everything to one
+   * save the number of moves as "ticks" and use this to trigger actions on every n ticks
    */
   useInterval(
     () => {
       if (state.isPlaying) {
-        dispatch(moveSnake());
+        actions.moveSnake();
+        setTicks(t => t + 1);
+        if (ticks % SPEED_UP_EVERY === 0) {
+          actions.speedUp();
+        }
+        if (ticks % OBSTACLE_EVERY === 0) {
+          actions.placeObstacle();
+        }
+        if (ticks % OBSTACLE_EXPIRE === 0) {
+          actions.expireObstacle();
+        }
       }
     },
-    [dispatch, state.isPlaying],
+    [actions, state.isPlaying],
     state.speed
-  );
-
-  /**
-   * speed up effect
-   * increases speed by 10% (multiplicitively) on the given interval
-   * could keep going after death and it wouldn't matter
-   */
-  useInterval(
-    () => {
-      if (state.isPlaying) {
-        dispatch(speedUp(0.9));
-      }
-    },
-    [dispatch, state.isPlaying],
-    SPEED_UP_EVERY
   );
 
   /**
@@ -115,7 +121,5 @@ export default function App() {
    * effect to expire apples?
    */
 
-  const onPressRestart = useCallback(() => dispatch(restart()), [dispatch]);
-
-  return <Board state={state} onPressRestart={onPressRestart} />;
+  return <Board state={state} {...actions} />;
 }

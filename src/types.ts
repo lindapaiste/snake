@@ -3,24 +3,11 @@ export interface Position {
   y: number;
 }
 
-export interface Square {
-  x: number;
-  y: number;
-  isSnake?: boolean;
-  isObstacle?: boolean;
-  isApple?: boolean;
-}
-
 export enum Direction {
   UP,
   LEFT,
   DOWN,
   RIGHT
-}
-
-export interface Snake {
-  direction: Direction;
-  squares: Position[];
 }
 
 export interface State {
@@ -34,9 +21,15 @@ export interface State {
   speed: number;
   //number of apples eaten
   score: number;
+  topScore: number;
   isDead: boolean;
   isFull: boolean;
   //handle pause
   isPlaying: boolean;
   needsGrow: number;
 }
+
+/**
+ * matches with CSS class names
+ */
+export type SquareType = "snake" | "apple" | "obstacle";
