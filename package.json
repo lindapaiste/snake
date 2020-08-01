@@ -1,13 +1,19 @@
 {
   "name": "snake-game",
   "version": "1.0.0",
-  "description": "",
-  "keywords": [],
+  "description": "keyboard-controlled React JS snake game",
+  "keywords": ["snake", "game", "react"],
+  "author": "Linda Paiste",
   "main": "src/index.tsx",
   "dependencies": {
     "react": "^16.12.0",
     "react-dom": "^16.12.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lindapaiste/snake.git"
+  },
+  "license": "ISC",
   "devDependencies": {
     "@types/react": "16.9.19",
     "@types/react-dom": "16.9.5",
