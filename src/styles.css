@@ -73,6 +73,7 @@ li {
 
 .square {
     position: absolute;
+    z-index: 1;
 }
 
 .iSquare {
@@ -108,6 +109,7 @@ li {
     background: #222;
     padding: 20px;
     text-align: center;
+    z-index: 2;
 }
 
 .banner h2 {
